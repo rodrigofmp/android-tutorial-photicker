@@ -1,8 +1,10 @@
 package com.devmasterteam.photicker.views;
 
+import android.annotation.SuppressLint;
 import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -73,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private View.OnClickListener onClickImageOption(final RelativeLayout relativeLayout, final Integer imageId, int width, int height) {
         return new View.OnClickListener() {
+            @SuppressLint("ClickableViewAccessibility")
             @Override
             public void onClick(View view) {
                 final ImageView imageView = new ImageView(MainActivity.this);
@@ -86,6 +89,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mImageSelected = imageView;
 
                 toggleControlPanel(true);
+
+                imageView.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View view, MotionEvent motionEvent) {
+
+                        float x, y;
+                        switch (motionEvent.getAction()) {
+                            case MotionEvent.ACTION_DOWN:
+                                mImageSelected = imageView;
+                                toggleControlPanel(true);
+                                break;
+                            case MotionEvent.ACTION_MOVE:
+                                int coords[] = {0, 0};
+                                relativeLayout.getLocationOnScreen(coords);
+
+                                x = (motionEvent.getRawX() - (imageView.getWidth()/2));
+                                y = motionEvent.getRawY() - ((coords[1] + 100) + (imageView.getHeight() / 2));
+
+                                imageView.setX(x);
+                                imageView.setY(y);
+                                break;
+                            case MotionEvent.ACTION_UP:
+                                break;
+                        }
+
+                        return true;
+                    }
+                });
             }
         };
     }
