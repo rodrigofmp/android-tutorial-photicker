@@ -3,6 +3,8 @@ package com.devmasterteam.photicker.utils;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import com.devmasterteam.photicker.R;
 
@@ -99,5 +101,33 @@ public class ImageUtil {
         // Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeResource(res, resId, options);
+    }
+
+    public static void handleZoomIn(ImageView mImageSelected) {
+        if (mImageSelected.getWidth() > 800)
+            return;
+
+        ViewGroup.LayoutParams params = mImageSelected.getLayoutParams();
+        params.width = (int) (mImageSelected.getWidth() + (mImageSelected.getWidth() * 0.1));
+        params.height = (int) (mImageSelected.getHeight() + (mImageSelected.getHeight() * 0.1));
+        mImageSelected.setLayoutParams(params);
+    }
+
+    public static void handleZoomOut(ImageView mImageSelected) {
+        if (mImageSelected.getWidth() < 50)
+            return;
+
+        ViewGroup.LayoutParams params = mImageSelected.getLayoutParams();
+        params.width = (int) (mImageSelected.getWidth() - (mImageSelected.getWidth() * 0.1));
+        params.height = (int) (mImageSelected.getHeight() - (mImageSelected.getHeight() * 0.1));
+        mImageSelected.setLayoutParams(params);
+    }
+
+    public static void handleRotateLeft(ImageView mImageSelected) {
+        mImageSelected.setRotation(mImageSelected.getRotation() - 5);
+    }
+
+    public static void handleRotateRight(ImageView mImageSelected) {
+        mImageSelected.setRotation(mImageSelected.getRotation() + 5);
     }
 }
