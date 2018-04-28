@@ -1,6 +1,5 @@
 package com.devmasterteam.photicker.views;
 
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,6 +14,8 @@ import com.devmasterteam.photicker.utils.ImageUtil;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
+    private final ViewHolder mViewHolder = new ViewHolder();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,10 +32,10 @@ public class MainActivity extends AppCompatActivity {
         final RelativeLayout relativeLayout = (RelativeLayout) this.findViewById(R.id.relative_photo_content_draw);
         final LinearLayout content = (LinearLayout) this.findViewById(R.id.linear_horizontal_scroll_content);
 
-        for (Integer imageId: mListImages) {
+        for (Integer imageId : mListImages) {
             ImageView image = new ImageView(this);
             image.setImageBitmap(ImageUtil.decodeSampledBitmapFromResource(getResources(), imageId, 70, 70));
-            image.setPadding(20,10,20,10);
+            image.setPadding(20, 10, 20, 10);
 
             BitmapFactory.Options dimensions = new BitmapFactory.Options();
             dimensions.inJustDecodeBounds = true; // Não usa alocação de memória para essa imagem
@@ -47,6 +48,9 @@ public class MainActivity extends AppCompatActivity {
 
             content.addView(image);
         }
+
+        this.mViewHolder.mLinearControlPanel = (LinearLayout) this.findViewById(R.id.linear_control_panel);
+        this.mViewHolder.mLinearSharePanel = (LinearLayout) this.findViewById(R.id.linear_share_panel);
     }
 
     private View.OnClickListener onClickImageOption(final RelativeLayout relativeLayout, final Integer imageId, int width, int height) {
@@ -60,7 +64,25 @@ public class MainActivity extends AppCompatActivity {
                 RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) imageView.getLayoutParams();
                 layoutParams.addRule(RelativeLayout.CENTER_HORIZONTAL);
                 layoutParams.addRule(RelativeLayout.CENTER_VERTICAL);
+
+                toggleControlPanel(true);
             }
         };
+    }
+
+    private void toggleControlPanel(boolean showControls) {
+        if (showControls) {
+            mViewHolder.mLinearControlPanel.setVisibility(View.VISIBLE);
+            mViewHolder.mLinearSharePanel.setVisibility(View.GONE);
+        }
+        else {
+            mViewHolder.mLinearControlPanel.setVisibility(View.GONE);
+            mViewHolder.mLinearSharePanel.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private static class ViewHolder {
+        LinearLayout mLinearSharePanel;
+        LinearLayout mLinearControlPanel;
     }
 }
