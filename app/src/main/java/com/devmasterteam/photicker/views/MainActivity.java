@@ -2,6 +2,7 @@ package com.devmasterteam.photicker.views;
 
 import android.annotation.SuppressLint;
 import android.graphics.BitmapFactory;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -12,13 +13,17 @@ import android.widget.RelativeLayout;
 
 import com.devmasterteam.photicker.R;
 import com.devmasterteam.photicker.utils.ImageUtil;
+import com.devmasterteam.photicker.utils.LongEventType;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener, View.OnTouchListener {
 
     private final ViewHolder mViewHolder = new ViewHolder();
     private ImageView mImageSelected;
+    private boolean mAutoIncrement;
+    private LongEventType mLongEventType;
+    private Handler mRepeatUpdateHandler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +76,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mViewHolder.mButtonRotateRight.setOnClickListener(this);
         mViewHolder.mButtonFinish.setOnClickListener(this);
         mViewHolder.mButtonRemove.setOnClickListener(this);
+
+        mViewHolder.mButtonZoomIn.setOnLongClickListener(this);
+        mViewHolder.mButtonZoomOut.setOnLongClickListener(this);
+        mViewHolder.mButtonRotateLeft.setOnLongClickListener(this);
+        mViewHolder.mButtonRotateRight.setOnLongClickListener(this);
+
+        mViewHolder.mButtonZoomIn.setOnTouchListener(this);
+        mViewHolder.mButtonZoomOut.setOnTouchListener(this);
+        mViewHolder.mButtonRotateLeft.setOnTouchListener(this);
+        mViewHolder.mButtonRotateRight.setOnTouchListener(this);
     }
 
     private View.OnClickListener onClickImageOption(final RelativeLayout relativeLayout, final Integer imageId, int width, int height) {
@@ -104,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 int coords[] = {0, 0};
                                 relativeLayout.getLocationOnScreen(coords);
 
-                                x = (motionEvent.getRawX() - (imageView.getWidth()/2));
+                                x = (motionEvent.getRawX() - (imageView.getWidth() / 2));
                                 y = motionEvent.getRawY() - ((coords[1] + 100) + (imageView.getHeight() / 2));
 
                                 imageView.setX(x);
@@ -125,8 +140,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (showControls) {
             mViewHolder.mLinearControlPanel.setVisibility(View.VISIBLE);
             mViewHolder.mLinearSharePanel.setVisibility(View.GONE);
-        }
-        else {
+        } else {
             mViewHolder.mLinearControlPanel.setVisibility(View.GONE);
             mViewHolder.mLinearSharePanel.setVisibility(View.VISIBLE);
         }
@@ -161,6 +175,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    @Override
+    public boolean onLongClick(View view) {
+        if (view.getId() == R.id.image_zoom_in)
+            this.mLongEventType = LongEventType.ZoomIn;
+
+        if (view.getId() == R.id.image_zoom_out)
+            this.mLongEventType = LongEventType.ZoomOut;
+
+        if (view.getId() == R.id.image_rotate_left)
+            this.mLongEventType = LongEventType.RotateLeft;
+
+        if (view.getId() == R.id.image_rotate_right)
+            this.mLongEventType = LongEventType.RotateRight;
+
+        mAutoIncrement = true;
+
+        new RptUpdater().run();
+
+        return false;
+    }
+
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        int id = view.getId();
+        if ((id == R.id.image_zoom_in)
+                || (id == R.id.image_zoom_out)
+                || (id == R.id.image_rotate_left)
+                || (id == R.id.image_rotate_right)) {
+            if (motionEvent.getAction() == motionEvent.ACTION_UP && mAutoIncrement) {
+                mAutoIncrement = false;
+                this.mLongEventType = null;
+            }
+        }
+
+        return false;
+    }
+
     private static class ViewHolder {
         ImageView mButtonZoomIn;
         ImageView mButtonZoomOut;
@@ -171,5 +222,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LinearLayout mLinearSharePanel;
         LinearLayout mLinearControlPanel;
         RelativeLayout mRelativePhotoContent;
+    }
+
+    private class RptUpdater implements Runnable {
+        @Override
+        public void run() {
+            if (mAutoIncrement)
+                mRepeatUpdateHandler.postDelayed(new RptUpdater(), 50);
+
+            if (mLongEventType != null) {
+                switch (mLongEventType) {
+                    case ZoomIn:
+                        ImageUtil.handleZoomIn(mImageSelected);
+                        break;
+                    case ZoomOut:
+                        ImageUtil.handleZoomOut(mImageSelected);
+                        break;
+                    case RotateLeft:
+                        ImageUtil.handleRotateLeft(mImageSelected);
+                        break;
+                    case RotateRight:
+                        ImageUtil.handleRotateRight(mImageSelected);
+                        break;
+                }
+            }
+        }
     }
 }
