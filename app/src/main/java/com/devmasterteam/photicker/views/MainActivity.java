@@ -1,8 +1,12 @@
 package com.devmasterteam.photicker.views;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.media.Image;
+import android.net.Uri;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -10,15 +14,19 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.devmasterteam.photicker.R;
 import com.devmasterteam.photicker.utils.ImageUtil;
 import com.devmasterteam.photicker.utils.LongEventType;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener, View.OnTouchListener {
 
+    private static final int REQUEST_TAKE_PHOTO = 2;
     private final ViewHolder mViewHolder = new ViewHolder();
     private ImageView mImageSelected;
     private boolean mAutoIncrement;
@@ -66,6 +74,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.mViewHolder.mButtonFinish = (ImageView) this.findViewById(R.id.image_finish);
         this.mViewHolder.mButtonRemove = (ImageView) this.findViewById(R.id.image_remove);
 
+        this.mViewHolder.mButtonTakePhoto = (ImageView) this.findViewById(R.id.image_take_photo);
+
         this.setListeners();
     }
 
@@ -86,6 +96,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mViewHolder.mButtonZoomOut.setOnTouchListener(this);
         mViewHolder.mButtonRotateLeft.setOnTouchListener(this);
         mViewHolder.mButtonRotateRight.setOnTouchListener(this);
+
+        mViewHolder.mButtonTakePhoto.setOnClickListener(this);
     }
 
     private View.OnClickListener onClickImageOption(final RelativeLayout relativeLayout, final Integer imageId, int width, int height) {
@@ -149,6 +161,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
+            case R.id.image_take_photo:
+                dispatchTakePictureIntent();
+                break;
+
             case R.id.image_zoom_in:
                 ImageUtil.handleZoomIn(this.mImageSelected);
                 break;
@@ -172,6 +188,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.image_remove:
                 this.mViewHolder.mRelativePhotoContent.removeView(this.mImageSelected);
                 break;
+        }
+    }
+
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        // Valida se é possível chamar essa intenção
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            File photoFile = null;
+            try {
+                photoFile = ImageUtil.createImageFile(this);
+                this.mViewHolder.mUriPhotoPath = Uri.fromFile(photoFile);
+            } catch (IOException ex) {
+                Toast.makeText(this, "Não foi possível iniciar a camera.", Toast.LENGTH_SHORT).show();
+            }
+
+            if (photoFile != null) {
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
+                startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+            }
         }
     }
 
@@ -222,6 +258,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LinearLayout mLinearSharePanel;
         LinearLayout mLinearControlPanel;
         RelativeLayout mRelativePhotoContent;
+        Uri mUriPhotoPath;
+        ImageView mButtonTakePhoto;
     }
 
     private class RptUpdater implements Runnable {
