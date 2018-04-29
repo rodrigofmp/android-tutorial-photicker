@@ -19,6 +19,7 @@ import android.widget.Toast;
 import com.devmasterteam.photicker.R;
 import com.devmasterteam.photicker.utils.ImageUtil;
 import com.devmasterteam.photicker.utils.LongEventType;
+import com.devmasterteam.photicker.utils.PermissionUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -162,6 +163,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.image_take_photo:
+                if (!PermissionUtil.hasCameraPermission(this)) {
+
+                }
                 dispatchTakePictureIntent();
                 break;
 
