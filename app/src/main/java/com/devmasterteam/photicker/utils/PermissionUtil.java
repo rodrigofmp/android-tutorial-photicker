@@ -13,7 +13,7 @@ import com.devmasterteam.photicker.views.MainActivity;
 
 public class PermissionUtil {
 
-    private static int CAMERA_PERMISSION = 0;
+    public static int CAMERA_PERMISSION = 0;
 
     public static boolean hasCameraPermission(Context context) {
         if (needToAskPermission()) {
