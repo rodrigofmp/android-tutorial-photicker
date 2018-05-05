@@ -25,6 +25,7 @@ import com.devmasterteam.photicker.R;
 import com.devmasterteam.photicker.utils.ImageUtil;
 import com.devmasterteam.photicker.utils.LongEventType;
 import com.devmasterteam.photicker.utils.PermissionUtil;
+import com.devmasterteam.photicker.utils.SocialUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,6 +83,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         this.mViewHolder.mButtonTakePhoto = (ImageView) this.findViewById(R.id.image_take_photo);
         this.mViewHolder.mImagePhoto = (ImageView) this.findViewById(R.id.image_photo);
+        this.mViewHolder.mImageInstagram = (ImageView) this.findViewById(R.id.image_instagram);
+        this.mViewHolder.mImageFacebook = (ImageView) this.findViewById(R.id.image_facebook);
+        this.mViewHolder.mImageWhatsapp = (ImageView) this.findViewById(R.id.image_whatsapp);
+        this.mViewHolder.mImageTwitter = (ImageView) this.findViewById(R.id.image_twitter);
 
         this.setListeners();
     }
@@ -105,6 +110,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mViewHolder.mButtonRotateRight.setOnTouchListener(this);
 
         mViewHolder.mButtonTakePhoto.setOnClickListener(this);
+
+        mViewHolder.mImageInstagram.setOnClickListener(this);
+        mViewHolder.mImageFacebook.setOnClickListener(this);
+        mViewHolder.mImageWhatsapp.setOnClickListener(this);
+        mViewHolder.mImageTwitter.setOnClickListener(this);
     }
 
     private View.OnClickListener onClickImageOption(final RelativeLayout relativeLayout, final Integer imageId, int width, int height) {
@@ -197,6 +207,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             case R.id.image_remove:
                 this.mViewHolder.mRelativePhotoContent.removeView(this.mImageSelected);
+                break;
+
+            case R.id.image_instagram:
+                SocialUtil.shareImageOnInsta(this, this.mViewHolder.mRelativePhotoContent, view);
+                break;
+
+            case R.id.image_facebook:
+                SocialUtil.shareImageOnFace(this, this.mViewHolder.mRelativePhotoContent, view);
+                break;
+
+            case R.id.image_twitter:
+                SocialUtil.shareImageTwitter(this, this.mViewHolder.mRelativePhotoContent, view);
+                break;
+
+            case R.id.image_whatsapp:
+                SocialUtil.shareImageWhats(this, this.mViewHolder.mRelativePhotoContent, view);
                 break;
         }
     }
@@ -318,6 +344,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Uri mUriPhotoPath;
         ImageView mButtonTakePhoto;
         ImageView mImagePhoto;
+        ImageView mImageInstagram;
+        ImageView mImageFacebook;
+        ImageView mImageTwitter;
+        ImageView mImageWhatsapp;
     }
 
     private class RptUpdater implements Runnable {
