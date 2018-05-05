@@ -24,6 +24,45 @@ public class SocialUtil {
     private static final String HASHTAG = "#photickerapp";
 
     public static void shareImageOnInsta(MainActivity mainActivity, RelativeLayout mRelativePhotoContent, View view) {
+        PackageManager pkManager = mainActivity.getPackageManager();
+
+        try {
+            pkManager.getPackageInfo("com.instagram.android", 0);
+
+            try {
+                Bitmap image = ImageUtil.drawBitmap(mRelativePhotoContent);
+                ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                image.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+
+                File file = new File(Environment.getExternalStorageDirectory() + File.separator + "temp_file.jpg");
+
+                try {
+                    file.createNewFile();
+                    FileOutputStream fo = new FileOutputStream(file);
+                    fo.write(bytes.toByteArray());
+
+                    Intent sendIntent = new Intent();
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file:///sdcard/temp_file.jpg"));
+                    sendIntent.setType("image/*");
+                    sendIntent.setPackage("com.instagram.android");
+
+                    view.getContext().startActivity(Intent.createChooser(sendIntent, mainActivity.getString(R.string.share_image)));
+
+                } catch (FileNotFoundException e) {
+                    Toast.makeText(mainActivity, R.string.unexpected_error, Toast.LENGTH_SHORT).show();
+                } catch (IOException e) {
+                    Toast.makeText(mainActivity, R.string.unexpected_error, Toast.LENGTH_SHORT).show();
+                }
+
+            } catch (Exception e) {
+                Toast.makeText(mainActivity, R.string.unexpected_error, Toast.LENGTH_SHORT).show();
+            }
+
+        } catch (PackageManager.NameNotFoundException e) {
+            Toast.makeText(mainActivity, R.string.instagram_not_installed, Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     public static void shareImageOnFace(MainActivity mainActivity, RelativeLayout mRelativePhotoContent, View view) {
