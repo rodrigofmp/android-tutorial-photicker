@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.net.Uri;
@@ -80,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.mViewHolder.mButtonRemove = (ImageView) this.findViewById(R.id.image_remove);
 
         this.mViewHolder.mButtonTakePhoto = (ImageView) this.findViewById(R.id.image_take_photo);
+        this.mViewHolder.mImagePhoto = (ImageView) this.findViewById(R.id.image_photo);
 
         this.setListeners();
     }
@@ -200,6 +202,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
+            this.setPhotoAsBackground();
+        }
+    }
+
+    private void setPhotoAsBackground() {
+        int targetW = this.mViewHolder.mImagePhoto.getWidth();
+        int targetH = this.mViewHolder.mImagePhoto.getHeight();
+
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(this.mViewHolder.mUriPhotoPath.getPath(), bmOptions);
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+
+        int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
+
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+
+        Bitmap bitmap = BitmapFactory.decodeFile(this.mViewHolder.mUriPhotoPath.getPath(), bmOptions);
+
+        this.mViewHolder.mImagePhoto.setImageBitmap(bitmap);
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == PermissionUtil.CAMERA_PERMISSION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -286,6 +315,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         RelativeLayout mRelativePhotoContent;
         Uri mUriPhotoPath;
         ImageView mButtonTakePhoto;
+        ImageView mImagePhoto;
     }
 
     private class RptUpdater implements Runnable {
