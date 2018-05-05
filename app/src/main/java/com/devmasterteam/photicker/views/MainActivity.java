@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (view.getId()) {
             case R.id.image_take_photo:
                 if (!PermissionUtil.hasCameraPermission(this)) {
-
+                    PermissionUtil.askCameraPermission(this);
                 }
                 dispatchTakePictureIntent();
                 break;
