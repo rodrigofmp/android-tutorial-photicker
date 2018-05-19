@@ -4,13 +4,15 @@ import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -34,6 +36,9 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener, View.OnTouchListener {
 
     private static final int REQUEST_TAKE_PHOTO = 2;
+    private static final String AUTHORITY = "com.devmasterteam.photicker.fileprovider";
+    private File mFileForPhoto;
+
     private final ViewHolder mViewHolder = new ViewHolder();
     private ImageView mImageSelected;
     private boolean mAutoIncrement;
@@ -241,7 +246,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
         bmOptions.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(this.mViewHolder.mUriPhotoPath.getPath(), bmOptions);
+
+        String path = mFileForPhoto.getAbsolutePath();
+        BitmapFactory.decodeFile(path, bmOptions);
+        Uri photoURI = FileProvider.getUriForFile(this, AUTHORITY, mFileForPhoto);
+
         int photoW = bmOptions.outWidth;
         int photoH = bmOptions.outHeight;
 
@@ -250,11 +259,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bmOptions.inJustDecodeBounds = false;
         bmOptions.inSampleSize = scaleFactor;
 
-        Bitmap bitmap = BitmapFactory.decodeFile(this.mViewHolder.mUriPhotoPath.getPath(), bmOptions);
+        Bitmap bitmap = BitmapFactory.decodeFile(path, bmOptions);
 
-        Bitmap bitmapRotated = ImageUtil.rotateImageIfRequired(bitmap, this.mViewHolder.mUriPhotoPath);
+        Bitmap bitmapRotated = ImageUtil.rotateImageIfRequired(bitmap, photoURI);
 
         this.mViewHolder.mImagePhoto.setImageBitmap(bitmapRotated);
+    }
+
+    public String getRealPathFromURI(Uri contentURI) {
+        String result;
+        Cursor cursor = this.getContentResolver().query(contentURI, null,
+                null, null, null);
+
+        if (cursor == null) {
+            // path
+            result = contentURI.getPath();
+        } else {
+            cursor.moveToFirst();
+            try {
+                int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+                result = cursor.getString(idx);
+            } catch (Exception e) {
+                //AppLog.handleException(ImageHelper.class.getName(), e);
+                //Toast.makeText(context, context.getResources().getString(R.string.error_get_image), Toast.LENGTH_SHORT).show();
+                result = "";
+            }
+            cursor.close();
+        }
+        return result;
     }
 
     @Override
@@ -276,21 +308,59 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void dispatchTakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+/*        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
         // Valida se é possível chamar essa intenção
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             File photoFile = null;
             try {
                 photoFile = ImageUtil.createImageFile(this);
-                this.mViewHolder.mUriPhotoPath = Uri.fromFile(photoFile);
+                this.mViewHolder.mUriPhotoPath = FileProvider.getUriForFile(this, this.getApplicationContext().getPackageName() + ".my.package.name.provider", photoFile);
             } catch (IOException ex) {
                 Toast.makeText(this, "Não foi possível iniciar a camera.", Toast.LENGTH_SHORT).show();
             }
 
             if (photoFile != null) {
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, FileProvider.getUriForFile(this, this.getApplicationContext().getPackageName() + ".my.package.name.provider", photoFile));
+                takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+            }
+        }
+*/
+        // Create file to receive the image taken by the camera
+        mFileForPhoto = null;
+        try {
+            mFileForPhoto = ImageUtil.createImageFile(this);
+        } catch (IOException e) {
+            Toast.makeText(this, "Não foi possível iniciar a camera.", Toast.LENGTH_SHORT).show();
+        }
+
+        // Returns null if create file was not possible
+        if (mFileForPhoto != null) {
+
+            // Provides the URI for the created file
+            Uri photoURI = FileProvider.getUriForFile(this, AUTHORITY, mFileForPhoto);
+
+            // Create intent to take picture
+            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+            // Ensure that there's a camera activity to handle the intent
+            if (takePictureIntent.resolveActivity(this.getPackageManager()) != null) {
+
+                // Params of the intent
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                // Necessary to avoid unknown errors
+                List<ResolveInfo> resInfoList = this.getApplicationContext().getPackageManager().queryIntentActivities(takePictureIntent, PackageManager.MATCH_DEFAULT_ONLY);
+                for (ResolveInfo resolveInfo : resInfoList) {
+                    String packageName = resolveInfo.activityInfo.packageName;
+                    this.getApplicationContext().grantUriPermission(packageName, photoURI, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                }
+
+                // Call the camera
+                this.startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+
             }
         }
     }

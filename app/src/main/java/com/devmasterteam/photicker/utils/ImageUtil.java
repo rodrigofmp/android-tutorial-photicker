@@ -2,6 +2,7 @@ package com.devmasterteam.photicker.utils;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -186,4 +187,5 @@ public class ImageUtil {
         mRelativePhotoContent.setDrawingCacheEnabled(true);
         return mRelativePhotoContent.getDrawingCache();
     }
+
 }
