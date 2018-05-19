@@ -12,6 +12,10 @@ import android.widget.Toast;
 
 import com.devmasterteam.photicker.R;
 import com.devmasterteam.photicker.views.MainActivity;
+import com.facebook.share.model.ShareHashtag;
+import com.facebook.share.model.SharePhoto;
+import com.facebook.share.model.SharePhotoContent;
+import com.facebook.share.widget.ShareDialog;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -66,6 +70,14 @@ public class SocialUtil {
     }
 
     public static void shareImageOnFace(MainActivity mainActivity, RelativeLayout mRelativePhotoContent, View view) {
+        SharePhoto photo = new SharePhoto.Builder()
+                .setBitmap(ImageUtil.drawBitmap(mRelativePhotoContent))
+                .build();
+        SharePhotoContent content = new SharePhotoContent.Builder()
+                .addPhoto(photo)
+                .setShareHashtag(new ShareHashtag.Builder().setHashtag(HASHTAG).build())
+                .build();
+        new ShareDialog(mainActivity).show(content);
     }
 
     public static void shareImageTwitter(MainActivity mainActivity, RelativeLayout mRelativePhotoContent, View view) {
